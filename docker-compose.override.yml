@@ -1,0 +1,22 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: deps
+    container_name: gieok-gonggan-web-dev
+    command: npm run dev
+    restart: "no"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      - NEXT_PUBLIC_API_PREFIX=${NEXT_PUBLIC_API_PREFIX:-/api/v1}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    ports:
+      - "${PORT:-3000}:3000"
