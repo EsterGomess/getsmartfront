@@ -1,8 +1,5 @@
 // lib/api.ts
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX ?? "/api/v1";
-
 // ─── Custom error ──────────────────────────────────────────
 
 export class ApiError extends Error {
@@ -20,7 +17,6 @@ export class ApiError extends Error {
 interface ApiOptions {
     method?: "GET" | "POST" | "PATCH" | "DELETE";
     body?: unknown;
-    apiClientToken?: string;
     userToken?: string;
 }
 
@@ -30,42 +26,33 @@ export async function api<T>(
     path: string,
     options: ApiOptions = {},
 ): Promise<T> {
-    const { method = "GET", body, apiClientToken, userToken } = options;
+    const { method = "GET", body, userToken } = options;
 
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
     };
 
-    if (apiClientToken) {
-        headers["Authorization"] = `Bearer ${apiClientToken}`;
-    }
     if (userToken) {
         headers["X-User-Token"] = userToken;
     }
 
-    const url = `${API_URL}${API_PREFIX}${path}`;
+    // Log only a sanitized route in development; path values and query strings
+    // can contain identifiers or user supplied data.
+    const route = path.split("?")[0].replace(/\/\d+(?=\/|$)/g, "/:id");
 
-    // [TEMP LOG]
-    console.log("[api] Request:", {
-        method,
-        url,
-        hasApiClientToken: !!apiClientToken,
-        hasUserToken: !!userToken,
-        body,
-    });
+    if (process.env.NODE_ENV === "development") {
+        console.debug("[api] Request", { method, route });
+    }
 
-    const response = await fetch(url, {
+    const response = await fetch(`/api/backend${path}`, {
         method,
         headers,
         body: body !== undefined ? JSON.stringify(body) : undefined,
     });
 
-    // [TEMP LOG]
-    console.log("[api] Response:", {
-        status: response.status,
-        ok: response.ok,
-        url,
-    });
+    if (process.env.NODE_ENV === "development") {
+        console.debug("[api] Response", { method, route, status: response.status });
+    }
 
     // 204 No Content — no body
     if (response.status === 204) {
@@ -77,14 +64,16 @@ export async function api<T>(
     try {
         data = text ? JSON.parse(text) : null;
     } catch {
-        // [TEMP LOG]
-        console.error("[api] Failed to parse JSON. Raw body:", text);
+        if (process.env.NODE_ENV === "development") {
+            console.warn("[api] Response was not valid JSON", {
+                method,
+                route,
+                status: response.status,
+            });
+        }
     }
 
     if (!response.ok) {
-        // [TEMP LOG]
-        console.error("[api] Request failed. Body:", data);
-
         const detail =
             (data as { detail?: string })?.detail ?? "Request failed";
         throw new ApiError(response.status, detail);
