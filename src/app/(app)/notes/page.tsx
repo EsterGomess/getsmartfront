@@ -216,7 +216,6 @@ function NoteDialog({
                     <SuggestConnections
                         title={title}
                         content={content}
-                        notes={notes}
                         onInsertLink={(t) =>
                             setContent((b) =>
                                 b.trimEnd() ? `${b.trimEnd()}\n\nSee also [[${t}]].` : `See also [[${t}]].`,
