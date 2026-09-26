@@ -56,6 +56,10 @@ function log(
     message: string,
     context: Record<string, unknown> = {},
 ) {
+    // This legacy server action may include provider error details in its context.
+    // Keep these diagnostics out of production logs to avoid retaining user data.
+    if (process.env.NODE_ENV === "production") return;
+
     const line = JSON.stringify({
         level,
         scope: "notes-ai",
