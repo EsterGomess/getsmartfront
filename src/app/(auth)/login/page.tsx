@@ -25,7 +25,7 @@ function LoginForm() {
         setError(null);
         setLoading(true);
         try {
-            await loginUser({ username, password });
+            await loginUser({ username: username.trim(), password });
             router.replace("/notes");
         } catch (err) {
             if (err instanceof ApiError && err.status === 401) {
