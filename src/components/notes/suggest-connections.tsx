@@ -2,45 +2,33 @@
 
 import { useState } from "react";
 import { Sparkles, Loader2, Plus } from "lucide-react";
-import { suggestConnections, type Suggestions } from "@/lib/notes-ai";
+import { suggestNoteConnections } from "@/lib/notes";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import type { Note } from "@/lib/types";
+import type { SuggestionsResponse } from "@/lib/types";
 
 interface SuggestConnectionsProps {
     title: string;
     content: string;
-    notes: Note[];
-    excludeId?: number;
     onInsertLink: (noteTitle: string) => void;
 }
 
 export function SuggestConnections({
                                        title,
                                        content,
-                                       notes,
-                                       excludeId,
                                        onInsertLink,
                                    }: SuggestConnectionsProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [result, setResult] = useState<Suggestions | null>(null);
+    const [result, setResult] = useState<SuggestionsResponse | null>(null);
 
     async function run() {
         setLoading(true);
         setError(null);
         try {
-            // Server Action — called directly, no wrapper needed
-            const data = await suggestConnections({
-                title,
-                body: content,
-                candidates: notes
-                    .filter((n) => n.id !== excludeId)
-                    .slice(0, 40)
-                    .map((n) => ({
-                        title: n.title,
-                        excerpt: n.content.slice(0, 240),
-                    })),
+            const data = await suggestNoteConnections({
+                title: title.trim(),
+                content: content.trim(),
             });
             setResult(data);
         } catch {
@@ -50,7 +38,11 @@ export function SuggestConnections({
         }
     }
 
-    const canSuggest = content.trim().length >= 10;
+    const canSuggest =
+        title.trim().length >= 1 &&
+        title.trim().length <= 255 &&
+        content.trim().length >= 10 &&
+        content.trim().length <= 20_000;
 
     return (
         <div className="rounded-lg border border-dashed p-4">
@@ -100,7 +92,7 @@ export function SuggestConnections({
                     </p>
                     {result.connections.length === 0 ? (
                         <p className="mt-1 text-[11px] text-muted-foreground">
-                            No related notes found.
+                            No suggestions
                         </p>
                     ) : (
                         <ul className="mt-2 space-y-2">
