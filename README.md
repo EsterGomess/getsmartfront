@@ -59,14 +59,20 @@ Available settings:
 
 | Variable | Description | Default |
 | :--- | :--- | :--- |
-| `NEXT_PUBLIC_API_URL` | Base URL of the backend API | `http://localhost:8000` |
-| `NEXT_PUBLIC_API_PREFIX` | Prefix for API routes | `/api/v1` |
+| `API_URL` | Backend URL, accessed only by the Next.js server | `http://localhost:8000` locally |
+| `API_PREFIX` | Backend API prefix | `/api/v1` |
+| `API_CLIENT_USERNAME` | Backend service account username (server-only) | required |
+| `API_CLIENT_PASSWORD` | Backend service account password (server-only) | required |
 | `OPENAI_API_KEY` | OpenAI API key (used on the server side) | - |
 | `PORT` | Port where the frontend is exposed | `3000` |
 
-> ⚠️ **Note:** The `.env.local` file is not copied into the Docker image for security reasons
-> (listed in `.dockerignore`). In production/Docker, pass the variables through
-> `docker-compose` or the command line.
+The service account credentials must stay private: do not prefix them with `NEXT_PUBLIC_`
+or commit their values. In production, provide them through the deployment's secret manager
+or environment configuration. Docker Compose defaults `API_URL` to
+`http://host.docker.internal:8000`; set it to the backend's reachable address when needed.
+
+> The `.env.local` file is not copied into the Docker image (listed in `.dockerignore`).
+> Pass the variables through Docker Compose or the command line.
 
 ---
 
@@ -102,16 +108,18 @@ npm run start
 The project uses Next.js's `output: "standalone"` feature together with a multi-stage
 image (`deps` ➔ `builder` ➔ `runner`), producing a light and optimized final image.
 
-To bring the application up in production with Docker Compose:
+Set the private variables in an uncommitted Compose env file (for local validation,
+`.env.local` can be used; in production, use the deployment secret manager or a protected
+env file). Then start the app with:
 
 ```bash
-docker compose -f docker-compose.yml up --build
+docker compose --env-file .env.local -f docker-compose.yml up --build
 ```
 
 Or in the background (detached):
 
 ```bash
-docker compose -f docker-compose.yml up --build -d
+docker compose --env-file .env.local -f docker-compose.yml up --build -d
 ```
 
 The application will be available at [http://localhost:3000](http://localhost:3000).
@@ -133,8 +141,9 @@ docker run -p 3000:3000 --env-file .env.local gieok-gonggan-web
 To develop inside containers with volume sync and hot reload:
 
 ```bash
-# Docker Compose automatically merges docker-compose.override.yml
-docker compose up --build
+# Set API_URL=http://host.docker.internal:8000 in .env.local when the backend
+# is running on the host machine. Compose does not load .env.local by default.
+docker compose --env-file .env.local up --build --force-recreate
 ```
 
 ---
