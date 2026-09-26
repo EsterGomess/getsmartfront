@@ -47,6 +47,20 @@ export interface Note {
     incoming_links?: NoteLink[];
 }
 
+export interface ConnectionSuggestion {
+    title: string;
+    reason: string;
+}
+
+export interface SuggestionsResponse {
+    connections: ConnectionSuggestion[];
+}
+
+export interface SuggestConnectionsRequest {
+    title: string;
+    content: string;
+}
+
 
 export interface NotesPageResponse {
     items: Note[];
