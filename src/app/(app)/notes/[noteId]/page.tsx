@@ -210,8 +210,6 @@ export default function NoteDetailPage() {
                 <SuggestConnections
                     title={note.title}
                     content={note.content}
-                    notes={notes}
-                    excludeId={note.id}
                     onInsertLink={async (noteTitle) => {
                         // Append the [[...]] markup to the stored content and re-save.
                         // The backend will strip it and create the NoteLink.
