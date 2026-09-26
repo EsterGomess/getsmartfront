@@ -1,7 +1,7 @@
 // src/lib/notes.ts
 import { api, ApiError } from "./api";
-import { authenticateApiClient, getUserToken, clearTokens } from "./auth";
-import type { NotesPageResponse } from "./types";
+import { getUserToken, clearTokens } from "./auth";
+import type { NotesPageResponse, SuggestConnectionsRequest, SuggestionsResponse } from "./types";
 
 interface FetchNotesParams {
     page?: number;
@@ -17,8 +17,6 @@ export async function fetchNotes({
         throw new ApiError(401, "Not authenticated");
     }
 
-    const apiClientToken = await authenticateApiClient();
-
     const params = new URLSearchParams({
         page: String(page),
         page_size: String(pageSize),
@@ -27,7 +25,6 @@ export async function fetchNotes({
     try {
         return await api<NotesPageResponse>(`/notes/list?${params.toString()}`, {
             method: "GET",
-            apiClientToken,
             userToken,
         });
     } catch (err) {
@@ -35,6 +32,24 @@ export async function fetchNotes({
         if (err instanceof ApiError && err.status === 401) {
             clearTokens();
         }
+        throw err;
+    }
+}
+
+export async function suggestNoteConnections(
+    payload: SuggestConnectionsRequest,
+): Promise<SuggestionsResponse> {
+    const userToken = getUserToken();
+    if (!userToken) throw new ApiError(401, "Not authenticated");
+
+    try {
+        return await api<SuggestionsResponse>("/notes/suggest-connections", {
+            method: "POST",
+            body: payload,
+            userToken,
+        });
+    } catch (err) {
+        if (err instanceof ApiError && err.status === 401) clearTokens();
         throw err;
     }
 }
