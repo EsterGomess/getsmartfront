@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "./api";
-import { authenticateApiClient, emitAuthExpired, getUserToken } from "./auth";
+import { emitAuthExpired, getUserToken } from "./auth";
 import type { Note, NoteType, NoteGraph } from "./types";
 
 // ─── Types ─────────────────────────────────────────────────
@@ -34,14 +34,13 @@ export interface UpdateNoteInput {
 
 // ─── Auth context ──────────────────────────────────────────
 
-async function buildAuthContext() {
+function buildAuthContext() {
     const userToken = getUserToken();
     if (!userToken) {
         emitAuthExpired();
         throw new ApiError(401, "Not authenticated");
     }
-    const apiClientToken = await authenticateApiClient();
-    return { apiClientToken, userToken };
+    return { userToken };
 }
 
 async function withAuthGuard<T>(fn: () => Promise<T>): Promise<T> {
@@ -97,7 +96,6 @@ export function useNotes(options?: UseNotesOptions) {
                         `/notes/list?page=${page}&page_size=${pageSize}`,
                         {
                             method: "GET",
-                            apiClientToken: ctx.apiClientToken,
                             userToken: ctx.userToken,
                         },
                     );
@@ -161,7 +159,6 @@ export function useNote(id: number) {
                     const ctx = await buildAuthContext();
                     return api<Note>(`/notes/note/${id}`, {
                         method: "GET",
-                        apiClientToken: ctx.apiClientToken,
                         userToken: ctx.userToken,
                     });
                 });
@@ -247,7 +244,6 @@ export async function createNote(input: CreateNoteInput): Promise<Note> {
         return api<Note>("/notes/create", {
             method: "POST",
             body: { ...input, title, content },
-            apiClientToken: ctx.apiClientToken,
             userToken: ctx.userToken,
         });
     });
@@ -262,7 +258,6 @@ export async function updateNote(
         return api<Note>(`/notes/note/${id}`, {
             method: "PATCH",
             body: patch,
-            apiClientToken: ctx.apiClientToken,
             userToken: ctx.userToken,
         });
     });
@@ -273,7 +268,6 @@ export async function deleteNote(id: number): Promise<void> {
         const ctx = await buildAuthContext();
         await api<void>(`/notes/note/${id}`, {
             method: "DELETE",
-            apiClientToken: ctx.apiClientToken,
             userToken: ctx.userToken,
         });
     });
@@ -306,7 +300,6 @@ export async function fetchNoteById(id: number): Promise<Note> {
         const ctx = await buildAuthContext();
         return api<Note>(`/notes/note/${id}`, {
             method: "GET",
-            apiClientToken: ctx.apiClientToken,
             userToken: ctx.userToken,
         });
     });
@@ -317,7 +310,6 @@ export async function fetchNoteGraph(): Promise<NoteGraph> {
         const ctx = await buildAuthContext();
         return api<NoteGraph>("/notes/graph", {
             method: "GET",
-            apiClientToken: ctx.apiClientToken,
             userToken: ctx.userToken,
         });
     });
