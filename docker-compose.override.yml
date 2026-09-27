@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: deps
-    container_name: gieok-gonggan-web-dev
+    container_name: ideiateca-web-dev
     command: npm run dev
     restart: "no"
     volumes:

@@ -1,4 +1,4 @@
-# 기억공간 - Gieok Gonggan
+# Ideiateca
 
 This application was developed as an MVP project for a graduate program at PUC-Rio.
 
@@ -23,7 +23,7 @@ using the **Zettelkasten** method created by Niklas Luhmann.
 ## Overview and Structure
 
 ```text
-gieok_gonggan/                         ← frontend root
+ideiateca/                             ← frontend root
 ├── src/                               ← Next.js source code
 ├── public/                            ← static public files
 ├── Dockerfile                         ← multi-stage (deps + builder + runner)
@@ -128,10 +128,10 @@ To run it directly via the Docker CLI:
 
 ```bash
 # Build the image
-docker build -t gieok-gonggan-web .
+docker build -t ideiateca-web .
 
 # Run the container
-docker run -p 3000:3000 --env-file .env.local gieok-gonggan-web
+docker run -p 3000:3000 --env-file .env.local ideiateca-web
 ```
 
 ---

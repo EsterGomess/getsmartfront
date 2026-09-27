@@ -11,7 +11,7 @@ export function AppLogo({ size = 32, className = "", priority = false }: AppLogo
     return (
         <Image
             src={appIcon}
-            alt="GieokGonggan Logo"
+            alt="Ideiateca Logo"
             width={size}
             height={size}
             priority={priority}

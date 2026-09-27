@@ -3,8 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: gieok-gonggan-web:latest
-    container_name: gieok-gonggan-web
+    image: ideiateca-web:latest
+    container_name: ideiateca-web
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"

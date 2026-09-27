@@ -26,7 +26,7 @@ export function AppSidebar() {
             <SidebarHeader className="flex flex-row items-center justify-between p-2">
                 <div className="flex items-center gap-2 px-2">
                     <AppLogo size={20} className="h-5 w-5" />
-                    <span className="text-sm font-semibold">GieokGonggan</span>
+                    <span className="text-sm font-semibold">Ideiateca</span>
                 </div>
                 <SidebarTrigger />
             </SidebarHeader>

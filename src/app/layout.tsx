@@ -8,7 +8,7 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "GieokGonggan — Zettelkasten",
+    title: "Ideiateca — Zettelkasten",
     description: "A personal knowledge space: atomic notes, linked together.",
     icons: {
         icon: "/favicon.png",

@@ -25,7 +25,7 @@ export function AppHeader({ children }: AppHeaderProps) {
                     <Link href="/notes" className="flex items-center gap-2">
                         <AppLogo size={32} className="h-8 w-8 border border-neutral-400" priority />
                         <span className="text-sm font-semibold text-neutral-800">
-              GieokGonggan
+              Ideiateca
             </span>
                     </Link>
 
