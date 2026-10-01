@@ -1,9 +1,10 @@
+// src/app/(app)/notes/[noteId]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Pencil, Trash2, Link2,  ArrowLeft } from "lucide-react";
+import { Pencil, Trash2, Link2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -13,7 +14,7 @@ import {
     useNotes,
 } from "@/lib/notes-store";
 import { ApiError } from "@/lib/api";
-import type { Note, NoteType } from "@/lib/types";
+import type { Note, NoteDetailed, NoteType } from "@/lib/types";
 import { SuggestConnections } from "@/components/notes/suggest-connections";
 import { NoteBodyEditor } from "@/components/notes/note-body-editor";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -30,7 +31,9 @@ export default function NoteDetailPage() {
     const { notes, refresh: refreshList } = useNotes({ pageSize: 100 });
 
     const noteId = Number(params.noteId);
-    const [note, setNote] = useState<Note | null>(null);
+
+    // NoteDetailed charge outgoing_links / incoming_links
+    const [note, setNote] = useState<NoteDetailed | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editing, setEditing] = useState(false);
@@ -117,13 +120,16 @@ export default function NoteDetailPage() {
     }
 
     // Resolve link rows into Note objects using the cached list.
-    const resolveNote = (id: number) => notes.find((n) => n.id === id);
+    const resolveNote = (id: number): Note | undefined =>
+        notes.find((n) => n.id === id);
+
     const outgoing = (note.outgoing_links ?? [])
         .map((l) => resolveNote(l.target_note_id))
-        .filter((n): n is Note => Boolean(n));
+        .filter((n: Note | undefined): n is Note => Boolean(n));
+
     const incoming = (note.incoming_links ?? [])
         .map((l) => resolveNote(l.source_note_id))
-        .filter((n): n is Note => Boolean(n));
+        .filter((n: Note | undefined): n is Note => Boolean(n));
 
     return (
         <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
