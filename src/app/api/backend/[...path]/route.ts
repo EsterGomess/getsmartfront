@@ -142,7 +142,6 @@ async function proxyRequest(
             .map(encodeURIComponent)
             .join("/")}${incomingUrl.search}`;
 
-        failurePhase = "service-auth";
         const headers = new Headers({
             Authorization: `Bearer ${await getApiClientToken()}`,
         });
@@ -151,7 +150,6 @@ async function proxyRequest(
         if (userToken) headers.set("X-User-Token", userToken);
 
         const body = isWrite ? await request.text() : undefined;
-        failurePhase = "backend-request";
 
         let upstream = await fetch(targetUrl, {
             method: request.method,
@@ -160,12 +158,9 @@ async function proxyRequest(
             cache: "no-store",
         });
 
-        // Só retenta se NÃO havia user token — caso contrário, o 401 é do usuário.
         if (upstream.status === 401 && !userToken) {
             cachedApiClientToken = null;
-            failurePhase = "service-auth";
             headers.set("Authorization", `Bearer ${await getApiClientToken(true)}`);
-            failurePhase = "backend-request";
             upstream = await fetch(targetUrl, {
                 method: request.method,
                 headers,
