@@ -1,17 +1,18 @@
 // src/lib/auth.ts
-import { api } from "./api";
+import { api } from "@/lib/api";
 import type {
     UserLoginPayload,
     UserLoginResponse,
-    UserRegisterPayload,
+    UserCreatePayload,
     UserRegisterResponse,
+    ResetPasswordPayload,
+    ForgotPasswordPayload,
 } from "./types";
 
 // ─── Storage keys ──────────────────────────────────────────
 
-const STORAGE_KEYS = {
-    USER_TOKEN: "gg.user_token",
-} as const;
+const USER_TOKEN_KEY = "gg.user_token";
+const LEGACY_SERVICE_TOKEN_KEY = "gg.api_client_token";
 
 // ─── Auth-expired event ────────────────────────────────────
 
@@ -41,22 +42,19 @@ export function onAuthExpired(handler: () => void): () => void {
 // ─── Storage helpers ───────────────────────────────────────
 
 export function saveUserToken(token: string): void {
-    localStorage.setItem(STORAGE_KEYS.USER_TOKEN, token);
+    localStorage.setItem(USER_TOKEN_KEY, token);
 }
 
 export function getUserToken(): string | null {
-    // Clear the service token stored by older frontend versions.
-    localStorage.removeItem("gg.api_client_token");
-    return localStorage.getItem(STORAGE_KEYS.USER_TOKEN);
+    return localStorage.getItem(USER_TOKEN_KEY);
 }
 
 export function clearTokens(): void {
-    localStorage.removeItem(STORAGE_KEYS.USER_TOKEN);
-    // Remove the service token stored by earlier versions of the frontend.
-    localStorage.removeItem("gg.api_client_token");
+    localStorage.removeItem(USER_TOKEN_KEY);
+    localStorage.removeItem(LEGACY_SERVICE_TOKEN_KEY);
 }
 
-// ─── User login (layer 2) ──────────────────────────────────
+// ─── Login ─────────────────────────────────────────────────
 
 export async function loginUser(
     payload: UserLoginPayload,
@@ -70,10 +68,10 @@ export async function loginUser(
     return response;
 }
 
-// ─── User signup ───────────────────────────────────────────
+// ─── Signup ────────────────────────────────────────────────
 
 export async function registerUser(
-    payload: UserRegisterPayload,
+    payload: UserCreatePayload,
 ): Promise<UserRegisterResponse> {
     return api<UserRegisterResponse>("/customers/register", {
         method: "POST",
@@ -85,4 +83,24 @@ export async function registerUser(
 
 export function logout(): void {
     emitAuthExpired();
+}
+
+// ─── Reset Password ────────────────────────────────────────
+
+export async function resetPassword(
+    payload: ResetPasswordPayload,
+): Promise<void> {
+    await api<void>("/customers/reset-password", {
+        method: "POST",
+        body: payload,
+    });
+}
+
+export async function forgotPassword(
+    payload: ForgotPasswordPayload,
+): Promise<void> {
+    await api<void>("/customers/forgot-password", {
+        method: "POST",
+        body: payload,
+    });
 }
