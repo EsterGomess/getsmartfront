@@ -1,3 +1,4 @@
+// src/components/notes/notes-pagination.tsx
 import * as React from "react";
 import {
     Pagination,
