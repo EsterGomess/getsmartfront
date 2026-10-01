@@ -87,7 +87,7 @@ function LoginForm() {
                         >
                             Password
                         </label>
-                        <a href="#" className="text-xs text-neutral-500 underline">
+                        <a href="/forgot-password" className="text-xs text-neutral-500 underline">
                             Forgot password?
                         </a>
                     </div>
