@@ -1,3 +1,4 @@
+// src/components/notes/empty.tsx
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 

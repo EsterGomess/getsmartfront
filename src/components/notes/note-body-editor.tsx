@@ -1,3 +1,4 @@
+// src/components/notes/note-body-editor.tsx
 "use client";
 
 import { useMemo, useRef, useState } from "react";

@@ -2,9 +2,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api, ApiError } from "./api";
 import { emitAuthExpired, getUserToken } from "./auth";
-import type { Note, NoteType, NoteGraph } from "./types";
+import type { Note, NoteType, NoteGraph, NoteDetailed} from "./types";
 
 // ─── Types ─────────────────────────────────────────────────
 
@@ -226,6 +227,24 @@ export function useNoteGraph() {
     return { graph, loading, error, refresh };
 }
 
+/**
+ * Creates a note and navigates to its detail page.
+ *
+ * Used by both the `/notes` modal and the `/notes/new` page, so the
+ * "create + redirect" flow lives in one place.
+ */
+export function useCreateNote() {
+    const router = useRouter();
+    return useCallback(
+        async (input: CreateNoteInput) => {
+            const note = await createNote(input);
+            router.push(`/notes/${note.id}`);
+            return note;
+        },
+        [router],
+    );
+}
+
 // ─── Mutations ─────────────────────────────────────────────
 
 export async function createNote(input: CreateNoteInput): Promise<Note> {
@@ -295,10 +314,10 @@ export function backlinks(all: Note[], note: Note): Note[] {
     );
 }
 
-export async function fetchNoteById(id: number): Promise<Note> {
+export async function fetchNoteById(id: number): Promise<NoteDetailed> {
     return withAuthGuard(async () => {
         const ctx = await buildAuthContext();
-        return api<Note>(`/notes/note/${id}`, {
+        return api<NoteDetailed>(`/notes/note/${id}`, {
             method: "GET",
             userToken: ctx.userToken,
         });

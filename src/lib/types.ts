@@ -1,39 +1,70 @@
-// lib/types.ts
+// src/lib/types.ts
 
-
+// ─── Enums ──────────────────────────────────────────────────
 export type NoteType = "FLEETING" | "LITERATURE" | "PERMANENT";
 
-// ─── Payloads (entry) ───────────────────────────────────────
-
+// ─── Auth: payloads ─────────────────────────────────────────
 export interface UserLoginPayload {
     username: string;
     password: string;
 }
 
-// ─── Response (output) ────────────────────────────────────────
+export interface UserCreatePayload {
+    username: string;
+    email: string;
+    password: string;
+}
+
+export interface ForgotPasswordPayload {
+    email: string;
+}
+
+export interface ResetPasswordPayload {
+    token: string;
+    new_password: string;
+    confirm_password: string;
+}
+
+export interface UpdateUserEmailPayload {
+    new_email: string;
+}
 
 export interface TokenResponse {
     access_token: string;
     token_type: string;
 }
 
+// ─── Auth: responses ────────────────────────────────────────
+// Matches backend UserReadSchema
 export interface User {
     id: number;
     username: string;
+    email: string | null;
+    is_active: boolean;
+    created_at: string;
 }
 
+// Matches backend UserLoginResponseSchema
 export interface UserLoginResponse {
+    username: string;
     access_token: string;
     token_type: string;
-    user: User;
 }
 
+// Matches backend UserResponseCreateSchema
+export interface UserRegisterResponse {
+    username: string;
+    email: string;
+}
+
+// ─── Notes ──────────────────────────────────────────────────
 export interface NoteLink {
     id: number;
     source_note_id: number;
     target_note_id: number;
 }
 
+// Matches backend NoteReadSchema
 export interface Note {
     id: number;
     title: string;
@@ -43,25 +74,31 @@ export interface Note {
     user_id: number;
     created_at: string;
     updated_at: string;
-    outgoing_links?: NoteLink[];
-    incoming_links?: NoteLink[];
 }
 
-export interface ConnectionSuggestion {
-    title: string;
-    reason: string;
+// Matches backend NoteReadDetailedSchema
+export interface NoteDetailed extends Note {
+    outgoing_links: NoteLink[];
+    incoming_links: NoteLink[];
 }
 
-export interface SuggestionsResponse {
-    connections: ConnectionSuggestion[];
-}
-
-export interface SuggestConnectionsRequest {
+// Matches backend NoteCreateSchema
+export interface NoteCreatePayload {
     title: string;
     content: string;
+    source?: string | null;
+    note_type?: NoteType;
 }
 
+// Matches backend NoteUpdateSchema (all optional)
+export interface NoteUpdatePayload {
+    title?: string | null;
+    content?: string | null;
+    source?: string | null;
+    note_type?: NoteType | null;
+}
 
+// Matches backend NotesPageSchema
 export interface NotesPageResponse {
     items: Note[];
     total: number;
@@ -70,19 +107,25 @@ export interface NotesPageResponse {
     pages: number;
 }
 
-export interface UserRegisterPayload {
-    username: string;
-    password: string;
+// ─── AI suggestions ─────────────────────────────────────────
+export interface ConnectionSuggestion {
+    title: string;
+    reason: string;
 }
 
-export interface UserRegisterResponse {
-    id: number;
-    username: string;
-
+// Matches backend SuggestConnectionsRequest
+export interface SuggestConnectionsRequest {
+    title: string;
+    content: string;
 }
 
-// ─── Graph ─────────────────────────────────────────────────
+// Matches backend SuggestionsSchema
+export interface SuggestionsResponse {
+    connections: ConnectionSuggestion[];
+}
 
+// ─── Graph ──────────────────────────────────────────────────
+// Matches backend GraphNodeSchema
 export interface GraphNodeData {
     id: number;
     title: string;
@@ -90,12 +133,14 @@ export interface GraphNodeData {
     link_count: number;
 }
 
+// Matches backend GraphEdgeSchema
 export interface GraphEdgeData {
     id: number;
     source: number;
     target: number;
 }
 
+// Matches backend NoteGraphSchema
 export interface NoteGraph {
     nodes: GraphNodeData[];
     edges: GraphEdgeData[];
