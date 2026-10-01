@@ -1,3 +1,4 @@
+// src/components/notes/note-card.tsx
 import Link from "next/link";
 import { FileText } from "lucide-react";
 import {
