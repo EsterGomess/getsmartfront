@@ -1,3 +1,4 @@
+// src/components/notes/suggest-connections.tsx
 "use client";
 
 import { useState } from "react";
