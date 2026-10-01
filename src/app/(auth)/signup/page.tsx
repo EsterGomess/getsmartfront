@@ -12,6 +12,7 @@ import { AppLogo } from "@/components/layout/app-logo";
 export default function SignupPage() {
     const router = useRouter();
     const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -22,6 +23,17 @@ export default function SignupPage() {
         e.preventDefault();
         setError(null);
 
+        const trimmedUsername = username.trim();
+        const trimmedEmail = email.trim().toLowerCase();
+
+        if (trimmedUsername.length < 3) {
+            setError("Username must be at least 3 characters");
+            return;
+        }
+        if (!trimmedEmail) {
+            setError("Email is required");
+            return;
+        }
         if (password !== confirmPassword) {
             setError("Passwords do not match");
             return;
@@ -29,7 +41,11 @@ export default function SignupPage() {
 
         setLoading(true);
         try {
-            await registerUser({ username, password });
+            await registerUser({
+                username: trimmedUsername,
+                password,
+                email: trimmedEmail,
+            });
             router.push("/login?registered=1");
         } catch (err) {
             if (err instanceof ApiError) setError(err.detail);
@@ -72,6 +88,26 @@ export default function SignupPage() {
                         minLength={3}
                         maxLength={50}
                         autoComplete="username"
+                        className="w-full rounded border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm outline-none focus:border-neutral-500"
+                    />
+                </div>
+
+                <div>
+                    <label
+                        htmlFor="email"
+                        className="mb-1 block text-xs uppercase tracking-wide text-neutral-500"
+                    >
+                        Email
+                    </label>
+                    <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        required
+                        maxLength={254}
+                        autoComplete="email"
                         className="w-full rounded border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm outline-none focus:border-neutral-500"
                     />
                 </div>
