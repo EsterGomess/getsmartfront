@@ -3,7 +3,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { FilePlus, Search, Link2 } from "lucide-react";
 
 import { outgoingLinks, useNotes } from "@/lib/notes-store";
