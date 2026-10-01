@@ -3,29 +3,14 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { FilePlus, Search, Link2 } from "lucide-react";
 
-import { createNote, outgoingLinks, useNotes } from "@/lib/notes-store";
-import { ApiError } from "@/lib/api";
-import type { Note, NoteType } from "@/lib/types";
-import { SuggestConnections } from "@/components/notes/suggest-connections";
-import { NoteBodyEditor } from "@/components/notes/note-body-editor";
-import { SegmentedControl } from "@/components/ui/segmented-control";
+import { outgoingLinks, useNotes } from "@/lib/notes-store";
 import { NotesPagination } from "@/components/notes/notes-pagination";
-import {
-    TYPES,
-    DEFAULT_NOTE_TYPE,
-    StateBox,
-    NoteTypeBadge,
-    labelCls,
-    TitleField
-} from "@/components/notes/note-ui";
-
-// ─── Page ──────────────────────────────────────────────────
+import { StateBox, NoteTypeBadge } from "@/components/notes/note-ui";
 
 export default function NotesPage() {
-    const router = useRouter();
     const {
         notes,
         total,
@@ -34,17 +19,18 @@ export default function NotesPage() {
         pageSize,
         loading,
         error,
-        refresh,
         setPage,
     } = useNotes({ pageSize: 12 });
+
     const [query, setQuery] = useState("");
-    const [open, setOpen] = useState(false);
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
         if (!q) return notes;
         return notes.filter(
-            (n) => n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q),
+            (n) =>
+                n.title.toLowerCase().includes(q) ||
+                n.content.toLowerCase().includes(q),
         );
     }, [notes, query]);
 
@@ -52,21 +38,26 @@ export default function NotesPage() {
         <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-semibold text-neutral-800">Your notes</h1>
+                    <h1 className="text-2xl font-semibold text-neutral-800">
+                        Your notes
+                    </h1>
                     <p className="mt-1 text-sm text-neutral-500">
                         A Zettelkasten: one idea per note, connected by links. Type{" "}
                         <kbd className="rounded border border-neutral-300 bg-neutral-50 px-1 py-0.5 font-mono text-[11px]">
                             [[
                         </kbd>{" "}
-                        while writing to reference another — backlinks appear automatically.
+                        while writing to reference another — backlinks appear
+                        automatically.
                     </p>
                 </div>
-                <button
-                    onClick={() => setOpen(true)}
+
+
+                <Link
+                    href="/notes/new"
                     className="inline-flex items-center gap-2 rounded border-2 border-dashed border-neutral-500 bg-white px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-50"
                 >
                     <FilePlus className="h-4 w-4" /> New note
-                </button>
+                </Link>
             </div>
 
             <div className="mb-6 flex items-center gap-2 rounded border border-neutral-300 bg-white px-3 py-2">
@@ -105,14 +96,17 @@ export default function NotesPage() {
                                 className="flex flex-col rounded-lg border-2 border-dashed border-neutral-400 bg-white p-5 transition hover:border-neutral-600"
                             >
                                 <div className="mb-2 flex items-center justify-between gap-2">
-                                    <h3 className="truncate text-sm font-semibold text-neutral-800">{n.title}</h3>
+                                    <h3 className="truncate text-sm font-semibold text-neutral-800">
+                                        {n.title}
+                                    </h3>
                                     <NoteTypeBadge type={n.note_type} />
                                 </div>
                                 <p className="mt-2 line-clamp-4 whitespace-pre-wrap text-xs text-neutral-500">
                                     {n.content}
                                 </p>
                                 <p className="mt-3 flex items-center gap-1 text-[11px] text-neutral-400">
-                                    <Link2 className="h-3 w-3" /> {outgoingLinks(n).length} links
+                                    <Link2 className="h-3 w-3" />{" "}
+                                    {outgoingLinks(n).length} links
                                 </p>
                             </Link>
                         ))}
@@ -131,118 +125,7 @@ export default function NotesPage() {
                 </>
             )}
 
-            {open && (
-                <NoteDialog
-                    notes={notes}
-                    onClose={() => setOpen(false)}
-                    onCreate={async (title, content, noteType) => {
-                        const note = await createNote({ title, content, note_type: noteType });
-                        setOpen(false);
-                        refresh();
-                        router.push(`/notes/${note.id}`);
-                    }}
-                />
-            )}
+
         </main>
-    );
-}
-
-// ─── Create dialog ─────────────────────────────────────────
-
-function NoteDialog({
-                        notes,
-                        onClose,
-                        onCreate,
-                    }: {
-    notes: Note[];
-    onClose: () => void;
-    onCreate: (title: string, content: string, noteType: NoteType) => Promise<void>;
-}) {
-    const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
-    const [noteType, setNoteType] = useState<NoteType>(DEFAULT_NOTE_TYPE);
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const canSubmit = title.trim() && content.trim() && !saving;
-
-    async function submit(e: React.FormEvent) {
-        e.preventDefault();
-        setError(null);
-        if (!title.trim()) return setError("Title is required");
-        if (!content.trim()) return setError("Content is required");
-
-        setSaving(true);
-        try {
-            await onCreate(title.trim(), content.trim(), noteType);
-        } catch (err) {
-            setError(err instanceof ApiError ? err.detail : "Could not create note. Try again.");
-        } finally {
-            setSaving(false);
-        }
-    }
-
-    return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/40 px-4"
-            onClick={onClose}
-        >
-            <form
-                onClick={(e) => e.stopPropagation()}
-                onSubmit={submit}
-                className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border-2 border-dashed border-neutral-500 bg-white p-6 shadow-lg"
-            >
-                <h2 className="text-lg font-semibold text-neutral-800">New note</h2>
-                <p className="mt-1 text-xs text-neutral-500">Keep it atomic: one idea per note.</p>
-
-                <div className="mt-5 space-y-4">
-                    <TitleField value={title} onChange={setTitle} />
-
-                    <div>
-                        <label className={labelCls}>Note</label>
-                        <NoteBodyEditor value={content} onChange={setContent} notes={notes} rows={6} />
-                    </div>
-
-                    <div>
-                        <label className={labelCls}>Type</label>
-                        <SegmentedControl
-                            value={noteType}
-                            onValueChange={(v) => setNoteType(v as NoteType)}
-                            options={TYPES}
-                            name="note_type"
-                        />
-                    </div>
-
-                    <SuggestConnections
-                        title={title}
-                        content={content}
-                        onInsertLink={(t) =>
-                            setContent((b) =>
-                                b.trimEnd() ? `${b.trimEnd()}\n\nSee also [[${t}]].` : `See also [[${t}]].`,
-                            )
-                        }
-                    />
-                </div>
-
-                {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-
-                <div className="mt-6 flex justify-end gap-2">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="rounded border border-neutral-300 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={!canSubmit}
-                        className="rounded bg-neutral-800 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {saving ? "Creating..." : "Create"}
-                    </button>
-                </div>
-            </form>
-        </div>
     );
 }
