@@ -30,8 +30,7 @@ export default function HomePage() {
                 setTotal(data.total);
             })
             .catch(() => {
-                // Erro silencioso — a página ainda funciona com lista vazia.
-                // Se quiser, troque por toast.error(...)
+                // Silence error
             })
             .finally(() => {
                 if (!cancelled) setLoading(false);
@@ -41,8 +40,8 @@ export default function HomePage() {
         };
     }, []);
 
-    // ⚠️ Topics/flashcards/review ainda não existem no backend.
-    // Quando criar os endpoints, substitua por chamadas reais.
+    // ⚠️ Topics/flashcards/review not implemented yer
+    // When endpoints create replace to real call.
     const topics: Array<{
         id: string;
         name: string;
