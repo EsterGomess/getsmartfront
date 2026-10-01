@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { LogOut, Network } from "lucide-react";
-import { logout } from "@/lib/auth";
+import { Network } from "lucide-react";
 import { AppLogo } from "@/components/layout/app-logo";
 import { ProfileMenu } from "@/components/profile-menu";
 
@@ -13,12 +11,6 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ children }: AppHeaderProps) {
-    const router = useRouter();
-
-    function handleLogout() {
-        logout();
-        router.replace("/login");
-    }
 
     return (
         <header className="border-b border-dashed border-neutral-400 bg-white/60">
