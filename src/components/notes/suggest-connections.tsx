@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { Sparkles, Loader2, Plus } from "lucide-react";
-import { suggestNoteConnections } from "@/lib/notes";
+import { suggestNoteConnections } from "@/lib/notes/notes";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { SuggestionsResponse } from "@/lib/types";

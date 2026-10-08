@@ -13,13 +13,29 @@ import {
     StickyNote,
     ArrowRight,
 } from "lucide-react";
-import { fetchNotes } from "@/lib/notes";
+import { fetchNotes } from "@/lib/notes/notes";
+import { useTopics } from "@/lib/topics-store";
 import type { Note } from "@/lib/types";
+
+// ─── Constants ─────────────────────────────────────────────
+
+// Backend doesn't store these yet — use visual defaults.
+const DEFAULT_COLOR = "bg-neutral-200";
+const DEFAULT_ICON = "📁";
+
+// ─── Page ──────────────────────────────────────────────────
 
 export default function HomePage() {
     const [notes, setNotes] = useState<Note[]>([]);
-    const [total, setTotal] = useState(0);
-    const [loading, setLoading] = useState(true);
+    const [notesTotal, setNotesTotal] = useState(0);
+    const [notesLoading, setNotesLoading] = useState(true);
+
+    // Small page for "Recent topics" + total from the paginated response.
+    const {
+        topics,
+        total: topicsTotal,
+        loading: topicsLoading,
+    } = useTopics({ pageSize: 4 });
 
     useEffect(() => {
         let cancelled = false;
@@ -27,36 +43,28 @@ export default function HomePage() {
             .then((data) => {
                 if (cancelled) return;
                 setNotes(data.items);
-                setTotal(data.total);
+                setNotesTotal(data.total);
             })
             .catch(() => {
                 // Silence error
             })
             .finally(() => {
-                if (!cancelled) setLoading(false);
+                if (!cancelled) setNotesLoading(false);
             });
         return () => {
             cancelled = true;
         };
     }, []);
 
-    // ⚠️ Topics/flashcards/review not implemented yer
-    // When endpoints create replace to real call.
-    const topics: Array<{
-        id: string;
-        name: string;
-        icon: string;
-        color: string;
-        flashcards?: unknown[];
-    }> = [];
+    // Flashcards / review not implemented yet.
     const due: Array<unknown> = [];
     const flashcardCount = 0;
 
     const stats = [
-        { icon: Folder, label: "Topics", value: topics.length, href: "/topics" },
+        { icon: Folder, label: "Topics", value: topicsTotal, href: "/topics" },
         { icon: Layers, label: "Flashcards", value: flashcardCount, href: "/flashcard" },
-        { icon: Brain, label: "Due today", value: due.length, href:  "/review/flashcards" },
-        { icon: StickyNote, label: "Notes", value: total, href: "/notes" },
+        { icon: Brain, label: "Due today", value: due.length, href: "/review/flashcards" },
+        { icon: StickyNote, label: "Notes", value: notesTotal, href: "/notes" },
     ];
 
     return (
@@ -82,10 +90,12 @@ export default function HomePage() {
                                 <s.icon className="h-4 w-4 text-neutral-600" />
                             </div>
                             <span className="text-xs uppercase tracking-wide text-neutral-500">
-                {s.label}
-              </span>
+                                {s.label}
+                            </span>
                         </div>
-                        <p className="mt-3 text-2xl font-semibold text-neutral-800">{s.value}</p>
+                        <p className="mt-3 text-2xl font-semibold text-neutral-800">
+                            {s.value}
+                        </p>
                     </Link>
                 ))}
             </div>
@@ -97,7 +107,9 @@ export default function HomePage() {
                         <Sparkles className="h-4 w-4 text-neutral-600" />
                     </div>
                     <div>
-                        <h2 className="text-sm font-semibold text-neutral-800">Today's review</h2>
+                        <h2 className="text-sm font-semibold text-neutral-800">
+                            Today's review
+                        </h2>
                         <p className="mt-0.5 text-xs text-neutral-500">
                             {due.length === 0
                                 ? "No cards to review today."
@@ -136,7 +148,7 @@ export default function HomePage() {
             </div>
 
             {/* Recent topics */}
-            {topics.length > 0 && (
+            {!topicsLoading && topics.length > 0 && (
                 <div className="mb-8">
                     <div className="mb-3 flex items-end justify-between">
                         <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">
@@ -154,15 +166,13 @@ export default function HomePage() {
                                 className="rounded-lg border-2 border-dashed border-neutral-400 bg-white p-4 transition hover:border-neutral-600"
                             >
                                 <div
-                                    className={`mb-2 flex h-10 w-10 items-center justify-center rounded border border-neutral-400 text-lg ${t.color}`}
+                                    className={`mb-2 flex h-10 w-10 items-center justify-center rounded border border-neutral-400 text-lg ${DEFAULT_COLOR}`}
                                 >
-                                    {t.icon}
+                                    {DEFAULT_ICON}
                                 </div>
-                                <h3 className="text-sm font-semibold text-neutral-800">{t.name}</h3>
-                                <p className="mt-1 text-xs text-neutral-400">
-                                    {(t.flashcards?.length ?? 0)}{" "}
-                                    {(t.flashcards?.length ?? 0) === 1 ? "card" : "cards"}
-                                </p>
+                                <h3 className="text-sm font-semibold text-neutral-800">
+                                    {t.title}
+                                </h3>
                             </Link>
                         ))}
                     </div>
@@ -179,7 +189,7 @@ export default function HomePage() {
                         View all
                     </Link>
                 </div>
-                {loading ? (
+                {notesLoading ? (
                     <div className="rounded-lg border-2 border-dashed border-neutral-400 bg-white p-8 text-center">
                         <p className="text-sm text-neutral-500">Loading...</p>
                     </div>
@@ -197,7 +207,9 @@ export default function HomePage() {
                                 href={`/notes/${n.id}`}
                                 className="rounded-lg border-2 border-dashed border-neutral-400 bg-white p-4 transition hover:border-neutral-600"
                             >
-                                <h3 className="text-sm font-semibold text-neutral-800">{n.title}</h3>
+                                <h3 className="text-sm font-semibold text-neutral-800">
+                                    {n.title}
+                                </h3>
                                 <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-xs text-neutral-500">
                                     {n.content}
                                 </p>

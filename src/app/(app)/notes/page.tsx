@@ -5,9 +5,12 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { FilePlus, Search, Link2 } from "lucide-react";
 
-import { outgoingLinks, useNotes } from "@/lib/notes-store";
-import { NotesPagination } from "@/components/notes/notes-pagination";
-import { StateBox, NoteTypeBadge } from "@/components/notes/note-ui";
+import { outgoingLinks, useNotes } from "@/lib/notes/notes-store";
+import { Pagination } from "@/components/pagination";
+import { NoteTypeBadge } from "@/components/notes/note-ui";
+import { PageShell } from "@/components/page-shell";
+import { ListState } from "@/components/list-state";
+import type { Note } from "@/lib/types";
 
 export default function NotesPage() {
     const {
@@ -33,8 +36,10 @@ export default function NotesPage() {
         );
     }, [notes, query]);
 
+    const isSearching = query.trim().length > 0;
+
     return (
-        <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
+        <PageShell>
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold text-neutral-800">
@@ -49,7 +54,6 @@ export default function NotesPage() {
                         automatically.
                     </p>
                 </div>
-
 
                 <Link
                     href="/notes/new"
@@ -69,62 +73,59 @@ export default function NotesPage() {
                 />
             </div>
 
-            {loading && <StateBox>Loading notes...</StateBox>}
-            {error && !loading && <StateBox tone="error">{error}</StateBox>}
-
-            {!loading && !error && filtered.length === 0 && (
-                <div className="rounded-lg border-2 border-dashed border-neutral-400 bg-white p-12 text-center">
-                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-neutral-400 bg-neutral-100 text-2xl">
-                        🗂️
-                    </div>
-                    <p className="text-sm text-neutral-500">
-                        {notes.length === 0
-                            ? 'No notes yet. Click "New note" to write your first one.'
-                            : "No note matches your search."}
-                    </p>
+            <ListState
+                loading={loading}
+                error={error}
+                items={filtered}
+                loadingLabel="Loading notes..."
+                emptyIcon="🗂️"
+                emptyMessage={
+                    notes.length === 0
+                        ? 'No notes yet. Click "New note" to write your first one.'
+                        : "No note matches your search."
+                }
+            >
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {filtered.map((n) => (
+                        <NoteCard key={n.id} note={n} />
+                    ))}
                 </div>
-            )}
 
-            {!loading && !error && filtered.length > 0 && (
-                <>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {filtered.map((n) => (
-                            <Link
-                                key={n.id}
-                                href={`/notes/${n.id}`}
-                                className="flex flex-col rounded-lg border-2 border-dashed border-neutral-400 bg-white p-5 transition hover:border-neutral-600"
-                            >
-                                <div className="mb-2 flex items-center justify-between gap-2">
-                                    <h3 className="truncate text-sm font-semibold text-neutral-800">
-                                        {n.title}
-                                    </h3>
-                                    <NoteTypeBadge type={n.note_type} />
-                                </div>
-                                <p className="mt-2 line-clamp-4 whitespace-pre-wrap text-xs text-neutral-500">
-                                    {n.content}
-                                </p>
-                                <p className="mt-3 flex items-center gap-1 text-[11px] text-neutral-400">
-                                    <Link2 className="h-3 w-3" />{" "}
-                                    {outgoingLinks(n).length} links
-                                </p>
-                            </Link>
-                        ))}
-                    </div>
+                <Pagination
+                    page={page}
+                    pages={pages}
+                    total={isSearching ? filtered.length : total}
+                    pageSize={pageSize}
+                    onPageChange={(newPage) => {
+                        setPage(newPage);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                />
+            </ListState>
+        </PageShell>
+    );
+}
 
-                    <NotesPagination
-                        page={page}
-                        pages={pages}
-                        total={query.trim() ? filtered.length : total}
-                        pageSize={pageSize}
-                        onPageChange={(newPage) => {
-                            setPage(newPage);
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                        }}
-                    />
-                </>
-            )}
+// ─── Card ──────────────────────────────────────────────────
 
-
-        </main>
+function NoteCard({ note }: { note: Note }) {
+    return (
+        <Link
+            href={`/notes/${note.id}`}
+            className="flex flex-col rounded-lg border-2 border-dashed border-neutral-400 bg-white p-5 transition hover:border-neutral-600"
+        >
+            <div className="mb-2 flex items-center justify-between gap-2">
+                <h3 className="truncate text-sm font-semibold text-neutral-800">
+                    {note.title}
+                </h3>
+                <NoteTypeBadge type={note.note_type} />
+            </div>
+            <p className="mt-2 line-clamp-4 whitespace-pre-wrap text-xs text-neutral-500">
+                {note.content}
+            </p>
+            <p className="mt-3 flex items-center gap-1 text-[11px] text-neutral-400">
+                <Link2 className="h-3 w-3" /> {outgoingLinks(note).length} links
+            </p>
+        </Link>
     );
 }

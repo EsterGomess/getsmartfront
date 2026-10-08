@@ -1,7 +1,7 @@
 // src/lib/notes.ts
-import { api, ApiError } from "./api";
-import { getUserToken, clearTokens } from "./auth";
-import type { NotesPageResponse, SuggestConnectionsRequest, SuggestionsResponse } from "./types";
+import { api, ApiError } from "../api";
+import { getUserToken, clearTokens } from "../auth";
+import type { NotesPageResponse, SuggestConnectionsRequest, SuggestionsResponse } from "../types";
 
 interface FetchNotesParams {
     page?: number;
