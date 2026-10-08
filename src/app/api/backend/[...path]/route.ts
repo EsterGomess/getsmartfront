@@ -6,9 +6,13 @@ export const runtime = "nodejs";
 
 let cachedApiClientToken: string | null = null;
 
+type FailurePhase = "route-validation" | "service-auth" | "backend-request";
+
 function isAllowedRoute(path: string[], method: string): boolean {
     const route = path.join("/");
+    const isNumeric = (s: string) => /^\d+$/.test(s);
 
+    // ─── Customers (auth) ──────────────────────────────────
     if (
         route === "customers/login" ||
         route === "customers/register" ||
@@ -18,6 +22,7 @@ function isAllowedRoute(path: string[], method: string): boolean {
         return method === "POST";
     }
 
+    // ─── Customers (profile) ───────────────────────────────
     if (route === "customers/me") {
         return method === "GET";
     }
@@ -25,19 +30,32 @@ function isAllowedRoute(path: string[], method: string): boolean {
         return method === "PATCH";
     }
 
+    // ─── Notes (collection) ────────────────────────────────
     if (route === "notes/list" || route === "notes/graph") {
         return method === "GET";
     }
     if (route === "notes/create" || route === "notes/suggest-connections") {
         return method === "POST";
     }
+
+    // ─── Notes (single) ────────────────────────────────────
     if (
         path.length === 3 &&
         path[0] === "notes" &&
         path[1] === "note" &&
-        /^\d+$/.test(path[2])
+        isNumeric(path[2])
     ) {
         return method === "GET" || method === "PATCH" || method === "DELETE";
+    }
+
+    // ─── Topics (collection) ───────────────────────────────
+    if (route === "topics") {
+        return method === "GET" || method === "POST" || method === "DELETE";
+    }
+
+    // ─── Topics (single) ───────────────────────────────────
+    if (path.length === 2 && path[0] === "topics" && isNumeric(path[1])) {
+        return method === "GET" || method === "PATCH";
     }
 
     return false;
@@ -115,8 +133,10 @@ async function proxyRequest(
     request: Request,
     { params }: { params: Promise<{ path: string[] }> },
 ): Promise<Response> {
-    let failurePhase: "route-validation" | "service-auth" | "backend-request" =
-        "route-validation";
+    // Wrapper mutável: `trace` é const, só a propriedade muda.
+    // Assim o `prefer-const` fica satisfeito e o log de erro mostra a fase real.
+    const trace: { phase: FailurePhase } = { phase: "route-validation" };
+
     try {
         const { path } = await params;
         const isWrite = request.method !== "GET" && request.method !== "HEAD";
@@ -137,6 +157,9 @@ async function proxyRequest(
             return Response.json({ detail: "Not authenticated" }, { status: 401 });
         }
 
+        // ─── Route is valid, request is same-origin, user is authenticated ─
+        trace.phase = "service-auth";
+
         const incomingUrl = new URL(request.url);
         const targetUrl = `${API_URL}${API_PREFIX}/${path
             .map(encodeURIComponent)
@@ -150,6 +173,9 @@ async function proxyRequest(
         if (userToken) headers.set("X-User-Token", userToken);
 
         const body = isWrite ? await request.text() : undefined;
+
+        // ─── Now we're actually talking to the backend ────────────────────
+        trace.phase = "backend-request";
 
         let upstream = await fetch(targetUrl, {
             method: request.method,
@@ -180,7 +206,7 @@ async function proxyRequest(
     } catch (error) {
         if (process.env.NODE_ENV === "development") {
             console.warn("[backend-proxy] Request failed", {
-                phase: failurePhase,
+                phase: trace.phase,
                 error: error instanceof Error ? error.message : "Unknown error",
             });
         }

@@ -72,6 +72,7 @@ export interface Note {
     source: string | null;
     note_type: NoteType;
     user_id: number;
+    topic_id?: number | null;
     created_at: string;
     updated_at: string;
 }
@@ -83,19 +84,21 @@ export interface NoteDetailed extends Note {
 }
 
 // Matches backend NoteCreateSchema
-export interface NoteCreatePayload {
+export interface CreateNoteInput {
     title: string;
     content: string;
     source?: string | null;
+    topic_id?: number | null;
     note_type?: NoteType;
 }
 
 // Matches backend NoteUpdateSchema (all optional)
-export interface NoteUpdatePayload {
-    title?: string | null;
-    content?: string | null;
+export interface UpdateNoteInput {
+    title?: string;
+    content?: string;
     source?: string | null;
-    note_type?: NoteType | null;
+    topic_id?: number | null;
+    note_type?: NoteType;
 }
 
 // Matches backend NotesPageSchema
@@ -106,6 +109,12 @@ export interface NotesPageResponse {
     page_size: number;
     pages: number;
 }
+
+export interface UseNotesOptions {
+    page?: number;
+    pageSize?: number;
+}
+
 
 // ─── AI suggestions ─────────────────────────────────────────
 export interface ConnectionSuggestion {
@@ -144,4 +153,59 @@ export interface GraphEdgeData {
 export interface NoteGraph {
     nodes: GraphNodeData[];
     edges: GraphEdgeData[];
+}
+
+
+// ─── Topics ──────────────────────────────────────────────────
+
+export interface Topic {
+    id: number;
+    title: string;
+    description: string;
+    user_id: number;
+    created_at: string;
+    updated_at: string;
+    Note:[]
+}
+
+// Matches backend TopicCreateSchema
+export interface TopicCreatePayload {
+    title: string;
+    description: string | null;
+}
+
+// Matches backend TopicUpdateSchema (all optional)
+export interface TopicUpdatePayload {
+    title?: string | null;
+    description?: string | null;
+    note_id?: string | null;
+}
+
+// Matches backend TopicWithNotesSchema
+export interface TopicPageResponse {
+    items: Topic[];
+    total: number;
+    page: number;
+    page_size: number;
+    pages: number;
+}
+
+export interface UseTopicsOptions {
+    page?: number;
+    pageSize?: number;
+}
+
+// ─── Types Paginate list ─────────────────────────────────────────────────
+
+export interface PaginatedResponse<T> {
+    items: T[];
+    total: number;
+    page: number;
+    page_size: number;
+    pages: number;
+}
+
+export interface UsePaginatedListOptions {
+    page?: number;
+    pageSize?: number;
 }

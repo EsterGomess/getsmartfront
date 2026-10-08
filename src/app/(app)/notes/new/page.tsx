@@ -2,15 +2,26 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { useCreateNote, useNotes } from "@/lib/notes-store";
+import { useCreateNote, useNotes } from "@/lib/notes/notes-store";
 import { getUserToken } from "@/lib/auth";
 import { NoteForm } from "@/components/notes/note-form";
+import { PageShell } from "@/components/page-shell";
 
 export default function NewNotePage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Veio de `/topics/{id}`? Então essa nota pertence ao tópico.
+    const topicIdParam = searchParams.get("topic_id");
+    const topicId = topicIdParam ? Number(topicIdParam) : null;
+    const validTopicId =
+        topicId !== null && Number.isFinite(topicId) && topicId > 0
+            ? topicId
+            : null;
+
     const { notes } = useNotes({ pageSize: 50 });
     const create = useCreateNote();
 
@@ -18,18 +29,23 @@ export default function NewNotePage() {
         if (!getUserToken()) router.replace("/login");
     }, [router]);
 
+    const backHref = validTopicId ? `/topics/${validTopicId}` : "/notes";
+    const backLabel = validTopicId ? "Back to topic" : "Back to notes";
+
     return (
-        <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-10">
+        <PageShell maxWidth="max-w-2xl">
             <Link
-                href="/notes"
+                href={backHref}
                 className="inline-flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-800"
             >
                 <ArrowLeft className="h-3.5 w-3.5" />
-                Back to notes
+                {backLabel}
             </Link>
 
             <div className="mt-4 rounded-lg border-2 border-dashed border-neutral-500 bg-white p-6">
-                <h1 className="text-lg font-semibold text-neutral-800">New note</h1>
+                <h1 className="text-lg font-semibold text-neutral-800">
+                    New note
+                </h1>
                 <p className="mt-1 text-xs text-neutral-500">
                     Keep it atomic: one idea per note.
                 </p>
@@ -40,11 +56,13 @@ export default function NewNotePage() {
                         autoFocusTitle
                         hideCancel
                         submitLabel="Create"
-                        onCancel={() => router.push("/notes")}
-                        onCreate={create}
+                        onCancel={() => router.push(backHref)}
+                        onCreate={(input) =>
+                            create({ ...input, topic_id: validTopicId })
+                        }
                     />
                 </div>
             </div>
-        </main>
+        </PageShell>
     );
 }

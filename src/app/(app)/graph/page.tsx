@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
-import { useNoteGraph } from "@/lib/notes-store";
+import { useNoteGraph } from "@/lib/notes/notes-store";
 import { GraphCanvas } from "@/components/graph/graph-canvas";
 import { GraphEmpty } from "@/components/graph/graph-empty";
 

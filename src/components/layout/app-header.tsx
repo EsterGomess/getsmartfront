@@ -43,6 +43,12 @@ export function AppHeader({ children }: AppHeaderProps) {
                             Notes
                         </Link>
                         <Link
+                            href="/topics"
+                            className="text-xs text-neutral-500 underline-offset-2 hover:text-neutral-800 hover:underline"
+                        >
+                            Topics
+                        </Link>
+                        <Link
                             href="/graph"
                             className="inline-flex items-center gap-1 text-xs text-neutral-500 underline-offset-2 hover:text-neutral-800 hover:underline"
                         >
