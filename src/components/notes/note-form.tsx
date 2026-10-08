@@ -3,8 +3,7 @@
 
 import { useState } from "react";
 import { ApiError } from "@/lib/api";
-import type { Note, NoteType } from "@/lib/types";
-import type { CreateNoteInput } from "@/lib/notes/notes-store";
+import type { Note, NoteType,CreateNoteInput } from "@/lib/types";
 import { NoteBodyEditor } from "@/components/notes/note-body-editor";
 import { SuggestConnections } from "@/components/notes/suggest-connections";
 import { SegmentedControl } from "@/components/ui/segmented-control";
